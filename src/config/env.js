@@ -30,14 +30,18 @@ function numberFromEnv(key, fallback) {
   return value;
 }
 
+const isVercel = Boolean(process.env.VERCEL);
+const defaultDatabasePath = isVercel ? "/tmp/bluemind-docs/bluemind-docs.sqlite" : "./data/bluemind-docs.sqlite";
+const defaultImageStorageRoot = isVercel ? "/tmp/bluemind-docs/images" : "./storage/images";
+
 export const config = {
   env: process.env.NODE_ENV || "development",
   host: process.env.HOST || "127.0.0.1",
   port: numberFromEnv("PORT", 4000),
-  databasePath: resolve(process.cwd(), process.env.DATABASE_PATH || "./data/bluemind-docs.sqlite"),
+  databasePath: resolve(process.cwd(), process.env.DATABASE_PATH || defaultDatabasePath),
   logLevel: process.env.LOG_LEVEL || "info",
   maxJsonBodyBytes: numberFromEnv("MAX_JSON_BODY_BYTES", 1024 * 1024),
-  imageStorageRoot: resolve(process.cwd(), process.env.IMAGE_STORAGE_ROOT || "./storage/images"),
+  imageStorageRoot: resolve(process.cwd(), process.env.IMAGE_STORAGE_ROOT || defaultImageStorageRoot),
   corsOrigin: process.env.CORS_ORIGIN || "*",
   devAuthUserId: process.env.DEV_AUTH_USER_ID || "dev-user",
   devAuthEmail: process.env.DEV_AUTH_EMAIL || "dev@bluemind.local"
