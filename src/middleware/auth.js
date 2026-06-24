@@ -25,12 +25,16 @@ export function getSessionToken(req) {
   return cookies.bm_docs_session || bearer || null;
 }
 
+function cookieSecurityAttributes() {
+  return process.env.VERCEL || process.env.NODE_ENV === "production" ? "SameSite=None; Secure" : "SameSite=Lax";
+}
+
 export function sessionCookie(token, expiresAt) {
-  return `bm_docs_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Expires=${new Date(expiresAt).toUTCString()}`;
+  return `bm_docs_session=${encodeURIComponent(token)}; HttpOnly; ${cookieSecurityAttributes()}; Path=/; Expires=${new Date(expiresAt).toUTCString()}`;
 }
 
 export function clearSessionCookie() {
-  return "bm_docs_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
+  return `bm_docs_session=; HttpOnly; ${cookieSecurityAttributes()}; Path=/; Max-Age=0`;
 }
 
 export function authenticate(ctx) {
