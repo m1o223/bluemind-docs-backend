@@ -9,3 +9,4 @@ storage/images/**/*
 coverage/
 .tmp/
 .vercel/
+.vercel
