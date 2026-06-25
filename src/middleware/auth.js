@@ -1,5 +1,8 @@
-import { unauthorized } from "../utils/errors.js";
-import { getUserBySessionToken } from "../modules/auth/service.js";
+const PUBLIC_WORKSPACE_USER = {
+  id: "public-workspace",
+  email: "public@bluemind-docs.local",
+  name: "BlueMind Docs"
+};
 
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/register",
@@ -37,9 +40,15 @@ export function clearSessionCookie() {
   return `bm_docs_session=; HttpOnly; ${cookieSecurityAttributes()}; Path=/; Max-Age=0`;
 }
 
-export function authenticate(ctx) {
-  const user = getUserBySessionToken(ctx.db, getSessionToken(ctx.req));
-  if (!user) throw unauthorized();
-  ctx.user = user;
+export function getPublicWorkspaceUser(db) {
+  const timestamp = new Date().toISOString();
+  db.prepare(`
+    INSERT OR IGNORE INTO users (id, email, name, password_hash, password_salt, created_at, updated_at)
+    VALUES (?, ?, ?, NULL, NULL, ?, ?)
+  `).run(PUBLIC_WORKSPACE_USER.id, PUBLIC_WORKSPACE_USER.email, PUBLIC_WORKSPACE_USER.name, timestamp, timestamp);
+  return db.prepare("SELECT id, email, name, created_at, updated_at FROM users WHERE id = ?").get(PUBLIC_WORKSPACE_USER.id);
 }
 
+export function authenticate(ctx) {
+  ctx.user = getPublicWorkspaceUser(ctx.db);
+}

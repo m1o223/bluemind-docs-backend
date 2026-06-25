@@ -4,7 +4,7 @@ import { createRouter } from "./http/router.js";
 import { parseRequestBody } from "./http/request.js";
 import { sendJson } from "./http/response.js";
 import { sendStaticFile } from "./http/static.js";
-import { authenticate, isPublicApiRoute } from "./middleware/auth.js";
+import { authenticate } from "./middleware/auth.js";
 import { corsHeaders } from "./middleware/cors.js";
 import { handleError } from "./middleware/errorHandler.js";
 import { registerFolderRoutes } from "./modules/folders/routes.js";
@@ -68,7 +68,7 @@ export function createApp({ db, config, logger }) {
       ctx.body = parsed.body;
       ctx.rawBody = parsed.rawBody;
 
-      if (ctx.url.pathname.startsWith("/api/") && !isPublicApiRoute(ctx.url.pathname)) authenticate(ctx);
+      if (ctx.url.pathname.startsWith("/api/")) authenticate(ctx);
 
       const handled = await router.handle(ctx);
       if (!handled && !res.writableEnded) {

@@ -94,21 +94,21 @@ test("does not serve frontend shell from the backend repository", async () => {
   }
 });
 
-test("auth sessions, folders, pages, share links, content, and image upload persist", async () => {
+test("public workspace folders, pages, share links, content, and image upload persist without auth", async () => {
   const app = await createTestServer();
   try {
-    const { cookie, user } = await registerSession(app.baseUrl, "crud");
-    assert.equal(user.email, "test-crud@example.com");
+    const cookie = null;
+    const publicUserId = "public-workspace";
 
     let result = await request(app.baseUrl, cookie, "GET", "/api/auth/me");
     assert.equal(result.response.status, 200);
-    assert.equal(result.json.data.user.id, user.id);
+    assert.equal(result.json.data.user.id, publicUserId);
 
     result = await request(app.baseUrl, cookie, "POST", "/api/folders", { name: "Work" });
     assert.equal(result.response.status, 201);
     const folder = result.json.data;
     assert.equal(folder.name, "Work");
-    assert.equal(folder.userId, user.id);
+    assert.equal(folder.userId, publicUserId);
 
     result = await request(app.baseUrl, cookie, "PATCH", `/api/folders/${folder.id}`, { name: "Projects" });
     assert.equal(result.response.status, 200);
@@ -165,22 +165,18 @@ test("auth sessions, folders, pages, share links, content, and image upload pers
     assert.equal(result.response.status, 200);
     assert.equal(result.json.data.content[0].text, "Autosaved draft");
 
-    assert.equal(app.db.prepare("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?").get(user.id).count, 1);
+    assert.equal(app.db.prepare("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?").get(publicUserId).count, 0);
     assert.equal(app.db.prepare("SELECT COUNT(*) as count FROM page_share_links WHERE page_id = ?").get(page.id).count, 1);
   } finally {
     await app.close();
   }
 });
 
-test("validation, permission, and auth errors return structured JSON", async () => {
+test("validation and missing resource errors return structured JSON without auth", async () => {
   const app = await createTestServer();
   try {
-    let result = await request(app.baseUrl, null, "POST", "/api/folders", { name: "No auth" });
-    assert.equal(result.response.status, 401);
-    assert.equal(result.json.error.code, "UNAUTHORIZED");
-
-    const { cookie } = await registerSession(app.baseUrl, "errors");
-    result = await request(app.baseUrl, cookie, "POST", "/api/folders", { name: "" });
+    const cookie = null;
+    let result = await request(app.baseUrl, cookie, "POST", "/api/folders", { name: "" });
     assert.equal(result.response.status, 400);
     assert.equal(result.json.error.code, "BAD_REQUEST");
 
@@ -191,5 +187,6 @@ test("validation, permission, and auth errors return structured JSON", async () 
     await app.close();
   }
 });
+
 
 

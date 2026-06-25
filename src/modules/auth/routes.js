@@ -1,7 +1,7 @@
 import { sendJson } from "../../http/response.js";
 import { requireObject, requireString } from "../../utils/validation.js";
-import { deleteSession, getUserBySessionToken, loginUser, registerUser } from "./service.js";
-import { getSessionToken, sessionCookie, clearSessionCookie } from "../../middleware/auth.js";
+import { deleteSession, loginUser, registerUser } from "./service.js";
+import { getPublicWorkspaceUser, getSessionToken, sessionCookie, clearSessionCookie } from "../../middleware/auth.js";
 
 function authPayload(result) {
   return { user: result.user, expiresAt: result.session.expiresAt };
@@ -28,7 +28,7 @@ export function registerAuthRoutes(router) {
   });
 
   router.get("/api/auth/me", async (ctx) => {
-    const user = getUserBySessionToken(ctx.db, getSessionToken(ctx.req));
+    const user = getPublicWorkspaceUser(ctx.db);
     sendJson(ctx.res, 200, { data: { user } }, ctx.responseHeaders);
   });
 
@@ -37,3 +37,4 @@ export function registerAuthRoutes(router) {
     sendJson(ctx.res, 200, { data: { ok: true } }, { ...ctx.responseHeaders, "set-cookie": clearSessionCookie() });
   });
 }
+
